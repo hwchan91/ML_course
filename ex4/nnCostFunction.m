@@ -8,8 +8,8 @@ function [J grad] = nnCostFunction(nn_params, ...
 %   [J grad] = NNCOSTFUNCTON(nn_params, hidden_layer_size, num_labels, ...
 %   X, y, lambda) computes the cost and gradient of the neural network. The
 %   parameters for the neural network are "unrolled" into the vector
-%   nn_params and need to be converted back into the weight matrices. 
-% 
+%   nn_params and need to be converted back into the weight matrices.
+%
 %   The returned parameter grad should be a "unrolled" vector of the
 %   partial derivatives of the neural network.
 %
@@ -24,8 +24,8 @@ Theta2 = reshape(nn_params((1 + (hidden_layer_size * (input_layer_size + 1))):en
 
 % Setup some useful variables
 m = size(X, 1);
-         
-% You need to return the following variables correctly 
+
+% You need to return the following variables correctly
 J = 0;
 Theta1_grad = zeros(size(Theta1));
 Theta2_grad = zeros(size(Theta2));
@@ -46,12 +46,12 @@ Theta2_grad = zeros(size(Theta2));
 %         that your implementation is correct by running checkNNGradients
 %
 %         Note: The vector y passed into the function is a vector of labels
-%               containing values from 1..K. You need to map this vector into a 
+%               containing values from 1..K. You need to map this vector into a
 %               binary vector of 1's and 0's to be used with the neural network
 %               cost function.
 %
 %         Hint: We recommend implementing backpropagation using a for-loop
-%               over the training examples if you are implementing it for the 
+%               over the training examples if you are implementing it for the
 %               first time.
 %
 % Part 3: Implement regularization with the cost function and gradients.
@@ -63,10 +63,31 @@ Theta2_grad = zeros(size(Theta2));
 %
 
 
+a1 = [ones(m, 1) X];
 
+z2 = a1 * Theta1';
+a2 = sigmoid(z2); % returns m x 25 matrix
+a2 = [ones(m,1) a2]; % returns m x 26 matrix
 
+z3 = a2 * Theta2';
+a3 = sigmoid(z3); % returns m x 10 matrix
+hx = a3;
 
+y_binarized = sparse (1:rows (y), y, 1); % convert y vector into a m x K matrix consisting of 1 and 0s
+regJ_matrix = (-y_binarized .* log(hx) - ((1 - y_binarized) .* log(1 - hx))) ./ m;
+regJ = sum(regJ_matrix(:));
 
+Theta1_variance = Theta1(:, 2:input_layer_size + 1) .^ 2;
+Theta2_variance = Theta2(:, 2:hidden_layer_size + 1) .^ 2;
+J = regJ + lambda / (2 * m) * (sum(Theta1_variance(:)) + sum(Theta2_variance(:)));
+
+delta3 = a3 .- y_binarized; % m x K matrix
+delta2 = delta3 * Theta2(:, 2:hidden_layer_size + 1) .* sigmoidGradient(z2); % delta3(m x K), Theta2 without 1s(K * hidden_layer_size), sig_grad2 (m x hidden_layer_size), resulting in m x hidden_layer_size matrix
+D2 = delta3' * a2; % delta3 (m x K), a2 (m * hidden_layer_size+1), resulting in K x hidden+1 matrix
+D1 = delta2' * a1; % delta2 (m * hidden_layer_size), a1 (m x var+1), resulting in hidden_layer_size x variables+1 matrix
+
+Theta2_grad = D2 / m;
+Theta1_grad = D1 / m;
 
 
 
