@@ -86,8 +86,13 @@ delta2 = delta3 * Theta2(:, 2:hidden_layer_size + 1) .* sigmoidGradient(z2); % d
 D2 = delta3' * a2; % delta3 (m x K), a2 (m * hidden_layer_size+1), resulting in K x hidden+1 matrix
 D1 = delta2' * a1; % delta2 (m * hidden_layer_size), a1 (m x var+1), resulting in hidden_layer_size x variables+1 matrix
 
-Theta2_grad = D2 / m;
-Theta1_grad = D1 / m;
+Theta1_copy = Theta1;
+Theta1_copy(:,1) = 0;
+Theta2_copy = Theta2;
+Theta2_copy(:,1) = 0;
+
+Theta2_grad = D2 / m + lambda / m * Theta2_copy;
+Theta1_grad = D1 / m + lambda / m * Theta1_copy;
 
 
 
